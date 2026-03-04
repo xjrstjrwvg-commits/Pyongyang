@@ -12,11 +12,15 @@
         .stat-card { @apply bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-2 rounded-2xl text-center; }
         input[type="range"] { @apply h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer; }
         ::-webkit-scrollbar { display: none; }
+        .success-btn { @apply bg-emerald-500 text-white !important; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 pb-24" onchange="saveSettings()" oninput="saveSettings()">
     <div class="max-w-md mx-auto space-y-4">
-        <header class="flex justify-between items-center"><h1 class="text-xl font-black italic text-blue-600 uppercase">Analyzer M+</h1><button onclick="copyAll()" id="allCopyBtn" class="bg-slate-200 dark:bg-slate-800 px-4 py-2 rounded-full text-[10px] font-bold uppercase">All Copy</button></header>
+        <header class="flex justify-between items-center">
+            <h1 class="text-xl font-black italic text-blue-600 uppercase">Analyzer M+</h1>
+            <button onclick="copyAll()" id="allCopyBtn" class="bg-slate-200 dark:bg-slate-800 px-4 py-2 rounded-full text-[10px] font-bold uppercase transition-colors">All Copy</button>
+        </header>
 
         <div id="stats_area" class="grid grid-cols-2 gap-2 hidden">
             <div class="stat-card"><p class="text-[8px] font-bold text-slate-400">有効ペア数</p><p class="text-lg font-black text-blue-600"><span id="pair_count">0</span>/5041</p></div>
@@ -27,7 +31,7 @@
             <div class="flex-1 glass p-2 rounded-xl flex items-center gap-2">
                 <label class="text-[9px] font-bold text-slate-400 uppercase italic">Top</label>
                 <input type="number" id="copy_limit" value="10" class="!p-1 !bg-transparent text-center border-b border-blue-500/30 w-12 text-blue-500 font-black">
-                <button onclick="copyTop()" id="topCopyBtn" class="bg-blue-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase">Copy Top</button>
+                <button onclick="copyTop()" id="topCopyBtn" class="bg-blue-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase transition-colors">Copy Top</button>
             </div>
             <div class="glass p-2 px-4 rounded-xl text-center min-w-[80px]"><p class="text-[8px] font-bold text-slate-400 uppercase">Visible</p><p class="text-xs font-black text-blue-500" id="visible_count">0</p></div>
         </div>
@@ -43,7 +47,7 @@
             <input id="mc" placeholder="必須文字 (ア,イ)">
             <div class="flex gap-4 text-[10px] font-bold uppercase border-t pt-2 border-slate-100 dark:border-slate-800"><label class="text-blue-500"><input type="checkbox" name="cat" value="country" checked> 国</label><label class="text-blue-500"><input type="checkbox" name="cat" value="capital"> 首都</label></div>
             <div class="flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-bold uppercase border-t pt-2 border-slate-100 dark:border-slate-800"><label class="text-rose-500"><input type="checkbox" id="abs_shift"> 絶対値ずらし</label><label><input type="checkbox" id="rt"> 牛耕</label><label><input type="checkbox" id="once"> 1回限定</label><label><input type="checkbox" id="conj"> 共役排除</label></div>
-            <button onclick="run()" id="btn" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase tracking-widest mt-2">Analyze Pairs</button>
+            <button onclick="run()" id="btn" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase tracking-widest mt-2 active:scale-95 transition-all">Analyze Pairs</button>
         </div>
 
         <details class="glass rounded-2xl overflow-hidden"><summary class="p-3 text-[10px] font-black uppercase text-slate-400 cursor-pointer flex justify-between bg-slate-50 dark:bg-slate-800/50"><span>Dictionary Settings</span><div class="flex gap-3"><span onclick="bulkSet(0)" class="text-blue-500">全可</span><span onclick="bulkSet(1)" class="text-red-500">全不可</span></div><span>▼</span></summary><div id="dict-content" class="p-4 max-h-80 overflow-y-auto"></div></details>
@@ -74,7 +78,7 @@
 
         function syncShift(val) {
             const v = parseInt(val); document.getElementById('ks_range').value = v; document.getElementById('ks_abs').value = v;
-            const idx = (KANA_ORDER.indexOf("ア") + v + KANA_ORDER.length) % KANA_ORDER.length;
+            const idx = (KANA_ORDER.indexOf("ア") + v + KANA_ORDER.length * 10) % KANA_ORDER.length;
             document.getElementById('shift_preview').innerText = `ア→${KANA_ORDER[idx]}`;
         }
 
@@ -133,9 +137,12 @@
             const order = document.getElementById('sort_order').value, filter = document.getElementById('filter_mode').value;
             let f = [...data];
             if(filter==='exists') f = f.filter(x => x.count > 0); else if(filter==='none') f = f.filter(x => x.count === 0);
+            
             if(order==='random') { for(let i=f.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[f[i],f[j]]=[f[j],f[i]];} }
-            else if(order==='desc') f.sort((a,b)=>b.count-a.count); else if(order==='asc') f.sort((a,b)=>a.count-b.count);
+            else if(order==='desc') f.sort((a,b)=>b.count-a.count); 
+            else if(order==='asc') f.sort((a,b)=>a.count-b.count);
             else f.sort((a,b)=>KANA_ORDER.indexOf(a.start)-KANA_ORDER.indexOf(b.start) || KANA_ORDER.indexOf(a.end)-KANA_ORDER.indexOf(b.end));
+            
             currentFilteredList = f;
             document.getElementById('visible_count').innerText = f.length.toLocaleString();
             document.getElementById('res').innerHTML = f.map(item => `
@@ -146,22 +153,53 @@
                 </div>`).join('');
         }
 
-        function copyOne(t, b) { navigator.clipboard.writeText(t).then(() => { b.innerText = "Done"; setTimeout(() => b.innerText = "Copy", 1000); }); }
+        // --- 改善版コピーロジック ---
+        function showSuccess(btn, message) {
+            const original = btn.innerText;
+            btn.innerText = message;
+            btn.classList.add('success-btn');
+            setTimeout(() => { btn.innerText = original; btn.classList.remove('success-btn'); }, 1500);
+        }
+
+        async function execCopy(text, btn, successMsg) {
+            if (!text) return;
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    showSuccess(btn, successMsg);
+                } else {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showSuccess(btn, successMsg);
+                }
+            } catch (err) {
+                alert("コピーに失敗しました。");
+            }
+        }
+
+        function copyOne(t, b) { execCopy(t, b, "Done"); }
+
         function copyTop() {
             const limit = parseInt(document.getElementById('copy_limit').value) || 10;
-            const top = currentFilteredList.filter(x => x.count > 0).slice(0, limit);
-            if(!top.length) return;
-            navigator.clipboard.writeText(top.map(x => `${x.start}→${x.end}: ${x.example}`).join('\n')).then(() => {
-                const b = document.getElementById('topCopyBtn'); b.innerText = "COPIED!"; setTimeout(() => b.innerText = "Copy Top", 1500);
-            });
+            const btn = document.getElementById('topCopyBtn');
+            const targets = currentFilteredList.filter(x => x.count > 0).slice(0, limit);
+            if(!targets.length) { alert("有効な結果がありません。"); return; }
+            const text = targets.map(x => `${x.start}→${x.end}: ${x.example}`).join('\n');
+            execCopy(text, btn, "COPIED!");
         }
+
         function copyAll() {
-            const all = currentFilteredList.filter(x => x.count > 0);
-            if(!all.length) return;
-            navigator.clipboard.writeText(all.map(x => `${x.start}→${x.end}: ${x.example}`).join('\n')).then(() => {
-                const b = document.getElementById('allCopyBtn'); b.innerText = "COPIED!"; setTimeout(() => b.innerText = "All Copy", 2000);
-            });
+            const btn = document.getElementById('allCopyBtn');
+            const targets = currentFilteredList.filter(x => x.count > 0);
+            if(!targets.length) { alert("有効な結果がありません。"); return; }
+            const text = targets.map(x => `${x.start}→${x.end}: ${x.example}`).join('\n');
+            execCopy(text, btn, "ALL COPIED!");
         }
+
         window.onload = init;
     </script>
 </body>
