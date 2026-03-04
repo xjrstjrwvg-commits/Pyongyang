@@ -22,13 +22,11 @@
             <button onclick="copyAll()" id="allCopyBtn" class="bg-slate-200 dark:bg-slate-800 px-4 py-2 rounded-full text-[10px] font-bold uppercase transition-colors">All Copy</button>
         </header>
 
-        <!-- 統計エリア -->
         <div id="stats_area" class="grid grid-cols-2 gap-2 hidden">
             <div class="stat-card"><p class="text-[8px] font-bold text-slate-400">有効ペア数</p><p class="text-lg font-black text-blue-600"><span id="pair_count">0</span>/5041</p></div>
             <div class="stat-card"><p class="text-[8px] font-bold text-slate-400">総ルート数</p><p class="text-lg font-black text-emerald-500" id="total_routes">0</p></div>
         </div>
 
-        <!-- コピー設定エリア -->
         <div class="flex items-center gap-2 px-1">
             <div class="flex-1 glass p-2 rounded-xl flex items-center gap-2">
                 <label class="text-[9px] font-bold text-slate-400 uppercase italic">Top</label>
@@ -38,15 +36,15 @@
             <div class="glass p-2 px-4 rounded-xl text-center min-w-[80px]"><p class="text-[8px] font-bold text-slate-400 uppercase">Visible</p><p class="text-xs font-black text-blue-500" id="visible_count">0</p></div>
         </div>
 
-        <!-- メインコントロール -->
         <div class="glass p-5 rounded-[32px] space-y-4">
-            <div class="grid grid-cols-2 gap-3">
-                <div><label class="text-[9px] font-bold text-slate-400 uppercase">単語数</label><input type="number" id="ml" value="3"></div>
-                <div>
+            <div class="flex gap-3">
+                <!-- 単語数の横幅を制限 -->
+                <div class="w-20 flex-shrink-0"><label class="text-[9px] font-bold text-slate-400 uppercase">単語数</label><input type="number" id="ml" value="3"></div>
+                <div class="flex-1">
                     <div class="flex justify-between"><label class="text-[9px] font-bold text-slate-400 uppercase">ずらし量</label><span id="shift_preview" class="text-[9px] font-bold text-blue-500 italic">ア→ア</span></div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 mt-1">
                         <input type="range" id="ks_range" min="-10" max="10" value="0" class="flex-1" oninput="syncShift(this.value)">
-                        <input type="number" id="ks_abs" value="0" class="!w-10 !p-1 text-center" oninput="syncShift(this.value)">
+                        <input type="number" id="ks_abs" value="0" class="!w-12 !p-1 text-center" oninput="syncShift(this.value)">
                     </div>
                 </div>
             </div>
@@ -64,7 +62,6 @@
             <button onclick="run()" id="btn" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase tracking-widest mt-2 active:scale-95 transition-all">Analyze Pairs</button>
         </div>
 
-        <!-- 辞書個別設定 -->
         <details class="glass rounded-2xl overflow-hidden">
             <summary class="p-3 text-[10px] font-black uppercase text-slate-400 cursor-pointer flex justify-between bg-slate-50 dark:bg-slate-800/50">
                 <span>Dictionary Settings</span>
@@ -74,13 +71,11 @@
             <div id="dict-content" class="p-4 max-h-80 overflow-y-auto"></div>
         </details>
 
-        <!-- 表示オプション -->
         <div class="flex flex-col gap-2 px-1">
             <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-slate-400 uppercase">Filter</span><select id="filter_mode" class="bg-transparent font-bold text-emerald-500 text-xs w-auto" onchange="display()"><option value="all">すべて表示</option><option value="exists" selected>解ありのみ</option><option value="none">解なしのみ</option></select></div>
             <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-slate-400 uppercase">Sort</span><select id="sort_order" class="bg-transparent font-bold text-blue-500 text-xs w-auto" onchange="display()"><option value="desc">多い順</option><option value="asc">少ない順</option><option value="kana">50音順</option><option value="random">ランダム</option></select></div>
         </div>
 
-        <!-- 結果表示エリア -->
         <div id="res" class="space-y-2"></div>
     </div>
 
@@ -162,12 +157,10 @@
             const order = document.getElementById('sort_order').value, filter = document.getElementById('filter_mode').value;
             let f = [...data];
             if(filter==='exists') f = f.filter(x => x.count > 0); else if(filter==='none') f = f.filter(x => x.count === 0);
-            
             if(order==='random') { for(let i=f.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[f[i],f[j]]=[f[j],f[i]];} }
             else if(order==='desc') f.sort((a,b)=>b.count-a.count); 
             else if(order==='asc') f.sort((a,b)=>a.count-b.count);
             else f.sort((a,b)=>KANA_ORDER.indexOf(a.start)-KANA_ORDER.indexOf(b.start) || KANA_ORDER.indexOf(a.end)-KANA_ORDER.indexOf(b.end));
-            
             currentFilteredList = f;
             document.getElementById('visible_count').innerText = f.length.toLocaleString();
             document.getElementById('res').innerHTML = f.map(item => `
@@ -200,36 +193,32 @@
                     document.body.removeChild(textArea);
                     showSuccess(btn, successMsg);
                 }
-            } catch (err) {
-                alert("コピーに失敗しました。");
-            }
+            } catch (err) { alert("コピーに失敗しました。"); }
         }
 
-        // コピー時の整形関数（（解なし）を抜く）
+        // コピー時の整形関数
         function formatCopyText(targets) {
             return targets.map(x => {
-                const cleanExample = x.example.replace("（解なし）", "").trim();
-                return `${x.start}→${x.end}: ${cleanExample}`;
+                const example = x.example.replace("（解なし）", "").trim();
+                // 解がない場合は「ア→ア」のみ、ある場合は「ア→イ: 例」の形式にする
+                return example === "" ? `${x.start}→${x.end}` : `${x.start}→${x.end}: ${example}`;
             }).join('\n');
         }
 
         function copyOne(t, b) { execCopy(t, b, "Done"); }
-
         function copyTop() {
             const limit = parseInt(document.getElementById('copy_limit').value) || 10;
             const btn = document.getElementById('topCopyBtn');
             const targets = currentFilteredList.slice(0, limit);
-            if(!targets.length) { alert("有効な結果がありません。"); return; }
+            if(!targets.length) return;
             execCopy(formatCopyText(targets), btn, "COPIED!");
         }
-
         function copyAll() {
             const btn = document.getElementById('allCopyBtn');
             const targets = currentFilteredList;
-            if(!targets.length) { alert("コピーする対象がありません。"); return; }
+            if(!targets.length) return;
             execCopy(formatCopyText(targets), btn, "ALL COPIED!");
         }
-
         window.onload = init;
     </script>
 </body>
