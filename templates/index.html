@@ -10,7 +10,6 @@
         .glass { @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg; }
         input, select { @apply bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-sm outline-none w-full font-bold; }
         .stat-card { @apply bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-2 rounded-2xl text-center; }
-        input[type="range"] { @apply h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer w-full; }
         ::-webkit-scrollbar { display: none; }
         .success-btn { @apply bg-emerald-500 text-white !important; }
     </style>
@@ -22,13 +21,11 @@
             <button onclick="copyAll()" id="allCopyBtn" class="bg-slate-200 dark:bg-slate-800 px-4 py-2 rounded-full text-[10px] font-bold uppercase transition-colors">All Copy</button>
         </header>
 
-        <!-- 統計エリア -->
         <div id="stats_area" class="grid grid-cols-2 gap-2 hidden">
             <div class="stat-card"><p class="text-[8px] font-bold text-slate-400">有効ペア数</p><p class="text-lg font-black text-blue-600"><span id="pair_count">0</span>/5041</p></div>
             <div class="stat-card"><p class="text-[8px] font-bold text-slate-400">総ルート数</p><p class="text-lg font-black text-emerald-500" id="total_routes">0</p></div>
         </div>
 
-        <!-- コピー設定 -->
         <div class="flex items-center gap-2 px-1">
             <div class="flex-1 glass p-2 rounded-xl flex items-center gap-2">
                 <label class="text-[9px] font-bold text-slate-400 uppercase italic">Top</label>
@@ -38,27 +35,19 @@
             <div class="glass p-2 px-4 rounded-xl text-center min-w-[80px]"><p class="text-[8px] font-bold text-slate-400 uppercase">Visible</p><p class="text-xs font-black text-blue-500" id="visible_count">0</p></div>
         </div>
 
-        <!-- メイン設定パネル（ここを重点的に修正） -->
         <div class="glass p-5 rounded-[32px] space-y-5">
-            <div class="flex items-start gap-4">
-                <!-- 単語数：幅を固定 -->
-                <div class="w-20 flex-shrink-0">
-                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1.5">単語数</label>
-                    <input type="number" id="ml" value="3" class="!p-2.5 text-center shadow-inner">
+            <!-- 設定：スライダーを廃止し、入力欄のみに整理 -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1.5 ml-1">単語数</label>
+                    <input type="number" id="ml" value="3" class="text-center shadow-inner">
                 </div>
-                
-                <!-- ずらし量：残りの幅をすべて使用 -->
-                <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-center mb-1.5">
-                        <label class="text-[9px] font-bold text-slate-400 uppercase">ずらし量 (±5)</label>
-                        <span id="shift_preview" class="text-[9px] font-bold text-blue-500 italic bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md">ア→ア</span>
+                <div>
+                    <div class="flex justify-between items-center mb-1.5 px-1">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase">ずらし量</label>
+                        <span id="shift_preview" class="text-[9px] font-bold text-blue-500 italic">ア→ア</span>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1 flex items-center h-10">
-                            <input type="range" id="ks_range" min="-5" max="5" value="0" oninput="syncShift(this.value)">
-                        </div>
-                        <input type="number" id="ks_abs" value="0" class="!w-12 !p-2.5 text-center flex-shrink-0 shadow-inner" oninput="syncShift(this.value)">
-                    </div>
+                    <input type="number" id="ks_abs" value="0" class="text-center shadow-inner" oninput="syncShift(this.value)">
                 </div>
             </div>
 
@@ -82,7 +71,6 @@
             <button onclick="run()" id="btn" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase tracking-widest mt-2 active:scale-95 transition-all">Analyze Pairs</button>
         </div>
 
-        <!-- 辞書設定 -->
         <details class="glass rounded-2xl overflow-hidden">
             <summary class="p-3 text-[10px] font-black uppercase text-slate-400 cursor-pointer flex justify-between bg-slate-50 dark:bg-slate-800/50">
                 <span>Dictionary Settings</span>
@@ -92,7 +80,6 @@
             <div id="dict-content" class="p-4 max-h-80 overflow-y-auto"></div>
         </details>
 
-        <!-- フィルター・ソート -->
         <div class="flex flex-col gap-2 px-1">
             <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-slate-400 uppercase">Filter</span><select id="filter_mode" class="bg-transparent font-bold text-emerald-500 text-xs w-auto" onchange="display()"><option value="all">すべて表示</option><option value="exists" selected>解ありのみ</option><option value="none">解なしのみ</option></select></div>
             <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-slate-400 uppercase">Sort</span><select id="sort_order" class="bg-transparent font-bold text-blue-500 text-xs w-auto" onchange="display()"><option value="desc">多い順</option><option value="asc">少ない順</option><option value="kana">50音順</option><option value="random">ランダム</option></select></div>
@@ -120,7 +107,7 @@
 
         function syncShift(val) {
             let v = parseInt(val); if (isNaN(v)) v = 0;
-            document.getElementById('ks_range').value = v; document.getElementById('ks_abs').value = v;
+            document.getElementById('ks_abs').value = v;
             const idx = (KANA_ORDER.indexOf("ア") + v + KANA_ORDER.length * 10) % KANA_ORDER.length;
             document.getElementById('shift_preview').innerText = `ア→${KANA_ORDER[idx]}`;
         }
