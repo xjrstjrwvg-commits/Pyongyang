@@ -37,17 +37,24 @@
         </div>
 
         <div class="glass p-5 rounded-[32px] space-y-4">
-            <div class="flex gap-3">
-                <!-- 単語数の横幅を制限 -->
-                <div class="w-20 flex-shrink-0"><label class="text-[9px] font-bold text-slate-400 uppercase">単語数</label><input type="number" id="ml" value="3"></div>
-                <div class="flex-1">
-                    <div class="flex justify-between"><label class="text-[9px] font-bold text-slate-400 uppercase">ずらし量</label><span id="shift_preview" class="text-[9px] font-bold text-blue-500 italic">ア→ア</span></div>
-                    <div class="flex items-center gap-2 mt-1">
-                        <input type="range" id="ks_range" min="-10" max="10" value="0" class="flex-1" oninput="syncShift(this.value)">
-                        <input type="number" id="ks_abs" value="0" class="!w-12 !p-1 text-center" oninput="syncShift(this.value)">
+            <!-- レイアウト修正箇所 -->
+            <div class="flex gap-4 items-end">
+                <div class="w-14 flex-shrink-0">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">単語数</label>
+                    <input type="number" id="ml" value="3" class="!p-2 text-center">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase">ずらし量 (±5)</label>
+                        <span id="shift_preview" class="text-[9px] font-bold text-blue-500 italic">ア→ア</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="range" id="ks_range" min="-5" max="5" value="0" class="flex-1" oninput="syncShift(this.value)">
+                        <input type="number" id="ks_abs" value="0" class="!w-10 !p-2 text-center flex-shrink-0" oninput="syncShift(this.value)">
                     </div>
                 </div>
             </div>
+
             <input id="mc" placeholder="必須文字 (ア,イ)">
             <div class="flex gap-4 text-[10px] font-bold uppercase border-t pt-2 border-slate-100 dark:border-slate-800">
                 <label class="text-blue-500"><input type="checkbox" name="cat" value="country" checked> 国</label>
@@ -97,7 +104,11 @@
         }
 
         function syncShift(val) {
-            const v = parseInt(val); document.getElementById('ks_range').value = v; document.getElementById('ks_abs').value = v;
+            let v = parseInt(val);
+            if (isNaN(v)) v = 0;
+            // スライダーの表示値を更新
+            document.getElementById('ks_range').value = v;
+            document.getElementById('ks_abs').value = v;
             const idx = (KANA_ORDER.indexOf("ア") + v + KANA_ORDER.length * 10) % KANA_ORDER.length;
             document.getElementById('shift_preview').innerText = `ア→${KANA_ORDER[idx]}`;
         }
@@ -157,10 +168,12 @@
             const order = document.getElementById('sort_order').value, filter = document.getElementById('filter_mode').value;
             let f = [...data];
             if(filter==='exists') f = f.filter(x => x.count > 0); else if(filter==='none') f = f.filter(x => x.count === 0);
+            
             if(order==='random') { for(let i=f.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[f[i],f[j]]=[f[j],f[i]];} }
             else if(order==='desc') f.sort((a,b)=>b.count-a.count); 
             else if(order==='asc') f.sort((a,b)=>a.count-b.count);
             else f.sort((a,b)=>KANA_ORDER.indexOf(a.start)-KANA_ORDER.indexOf(b.start) || KANA_ORDER.indexOf(a.end)-KANA_ORDER.indexOf(b.end));
+            
             currentFilteredList = f;
             document.getElementById('visible_count').innerText = f.length.toLocaleString();
             document.getElementById('res').innerHTML = f.map(item => `
@@ -196,11 +209,9 @@
             } catch (err) { alert("コピーに失敗しました。"); }
         }
 
-        // コピー時の整形関数
         function formatCopyText(targets) {
             return targets.map(x => {
                 const example = x.example.replace("（解なし）", "").trim();
-                // 解がない場合は「ア→ア」のみ、ある場合は「ア→イ: 例」の形式にする
                 return example === "" ? `${x.start}→${x.end}` : `${x.start}→${x.end}: ${example}`;
             }).join('\n');
         }
