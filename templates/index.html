@@ -7,63 +7,50 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         html, body { overflow-x: hidden; position: relative; width: 100%; touch-action: pan-y; }
-        .dark { color-scheme: dark; }
         .glass { @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg; }
         input, select { @apply bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-sm outline-none w-full font-bold; }
         .stat-card { @apply bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-2 rounded-2xl text-center; }
-        ::-webkit-scrollbar { display: none; }
-        /* スライダーの見た目調整 */
         input[type="range"] { @apply h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer; }
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 pb-24" onchange="saveSettings()" oninput="saveSettings()">
     <div class="max-w-md mx-auto space-y-4">
-        <header class="flex justify-between items-center">
-            <h1 class="text-xl font-black italic text-blue-600 uppercase">Analyzer M+</h1>
-            <button onclick="copyAll()" id="allCopyBtn" class="bg-slate-200 dark:bg-slate-800 px-4 py-2 rounded-full text-[10px] font-bold uppercase">All Copy</button>
-        </header>
+        <header class="flex justify-between items-center"><h1 class="text-xl font-black italic text-blue-600 uppercase">Analyzer M+</h1><button onclick="copyAll()" id="allCopyBtn" class="bg-slate-200 dark:bg-slate-800 px-4 py-2 rounded-full text-[10px] font-bold uppercase">All Copy</button></header>
 
-        <!-- ステータスエリア -->
         <div id="stats_area" class="grid grid-cols-2 gap-2 hidden">
             <div class="stat-card"><p class="text-[8px] font-bold text-slate-400">有効ペア数</p><p class="text-lg font-black text-blue-600"><span id="pair_count">0</span>/5041</p></div>
             <div class="stat-card"><p class="text-[8px] font-bold text-slate-400">総ルート数</p><p class="text-lg font-black text-emerald-500" id="total_routes">0</p></div>
         </div>
 
-        <!-- コピー設定 -->
         <div class="flex items-center gap-2 px-1">
             <div class="flex-1 glass p-2 rounded-xl flex items-center gap-2">
                 <label class="text-[9px] font-bold text-slate-400 uppercase italic">Top</label>
                 <input type="number" id="copy_limit" value="10" class="!p-1 !bg-transparent text-center border-b border-blue-500/30 w-12 text-blue-500 font-black">
-                <button onclick="copyTop()" id="topCopyBtn" class="bg-blue-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase active:scale-95 transition-all">Copy Top</button>
+                <button onclick="copyTop()" id="topCopyBtn" class="bg-blue-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase">Copy Top</button>
             </div>
             <div class="glass p-2 px-4 rounded-xl text-center min-w-[80px]"><p class="text-[8px] font-bold text-slate-400 uppercase">Visible</p><p class="text-xs font-black text-blue-500" id="visible_count">0</p></div>
         </div>
 
-        <!-- メイン設定パネル -->
         <div class="glass p-5 rounded-[32px] space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div><label class="text-[9px] font-bold text-slate-400 uppercase">単語数</label><input type="number" id="ml" value="3"></div>
                 <div>
                     <div class="flex justify-between"><label class="text-[9px] font-bold text-slate-400 uppercase">ずらし量</label><span id="shift_preview" class="text-[9px] font-bold text-blue-500 italic">ア→ア</span></div>
-                    <div class="flex items-center gap-2">
-                        <input type="range" id="ks_range" min="-10" max="10" value="0" class="flex-1" oninput="syncShift(this.value)">
-                        <input type="number" id="ks_abs" value="0" class="!w-10 !p-1 text-center" oninput="syncShift(this.value)">
-                    </div>
+                    <div class="flex items-center gap-2"><input type="range" id="ks_range" min="-10" max="10" value="0" class="flex-1" oninput="syncShift(this.value)"><input type="number" id="ks_abs" value="0" class="!w-10 !p-1 text-center" oninput="syncShift(this.value)"></div>
                 </div>
             </div>
             <input id="mc" placeholder="必須文字 (ア,イ)">
             <div class="flex gap-4 text-[10px] font-bold uppercase border-t pt-2 border-slate-100 dark:border-slate-800"><label class="text-blue-500"><input type="checkbox" name="cat" value="country" checked> 国</label><label class="text-blue-500"><input type="checkbox" name="cat" value="capital"> 首都</label></div>
-            <div class="flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-bold uppercase border-t pt-2 border-slate-100 dark:border-slate-800"><label><input type="checkbox" id="use_shift"> ずらし</label><label><input type="checkbox" id="rt"> 牛耕</label><label><input type="checkbox" id="once"> 1回限定</label><label><input type="checkbox" id="conj"> 共役排除</label></div>
+            <div class="flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-bold uppercase border-t pt-2 border-slate-100 dark:border-slate-800"><label class="text-rose-500"><input type="checkbox" id="abs_shift"> 絶対値ずらし</label><label><input type="checkbox" id="rt"> 牛耕</label><label><input type="checkbox" id="once"> 1回限定</label><label><input type="checkbox" id="conj"> 共役排除</label></div>
             <button onclick="run()" id="btn" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase tracking-widest mt-2">Analyze Pairs</button>
         </div>
 
-        <!-- 辞書設定 -->
         <details class="glass rounded-2xl overflow-hidden"><summary class="p-3 text-[10px] font-black uppercase text-slate-400 cursor-pointer flex justify-between bg-slate-50 dark:bg-slate-800/50"><span>Dictionary Settings</span><div class="flex gap-3"><span onclick="bulkSet(0)" class="text-blue-500">全可</span><span onclick="bulkSet(1)" class="text-red-500">全不可</span></div><span>▼</span></summary><div id="dict-content" class="p-4 max-h-80 overflow-y-auto"></div></details>
 
-        <!-- フィルタと結果表示 -->
         <div class="flex flex-col gap-2 px-1">
-            <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-slate-400 uppercase">Filter</span><select id="filter_mode" class="bg-transparent font-bold text-emerald-500 text-xs w-auto outline-none" onchange="display()"><option value="all">すべて表示</option><option value="exists" selected>解ありのみ</option><option value="none">解なしのみ</option></select></div>
-            <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-slate-400 uppercase">Sort</span><select id="sort_order" class="bg-transparent font-bold text-blue-500 text-xs w-auto outline-none" onchange="display()"><option value="desc">多い順</option><option value="asc">少ない順</option><option value="kana">50音順</option><option value="random">ランダム</option></select></div>
+            <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-slate-400 uppercase">Filter</span><select id="filter_mode" class="bg-transparent font-bold text-emerald-500 text-xs w-auto" onchange="display()"><option value="all">すべて表示</option><option value="exists" selected>解ありのみ</option><option value="none">解なしのみ</option></select></div>
+            <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-slate-400 uppercase">Sort</span><select id="sort_order" class="bg-transparent font-bold text-blue-500 text-xs w-auto" onchange="display()"><option value="desc">多い順</option><option value="asc">少ない順</option><option value="kana">50音順</option><option value="random">ランダム</option></select></div>
         </div>
         <div id="res" class="space-y-2"></div>
     </div>
@@ -76,9 +63,8 @@
             const r = await fetch('/get_dictionary'); masterDataCache = await r.json();
             if (localStorage.analyzerSettings) {
                 const s = JSON.parse(localStorage.analyzerSettings);
-                document.getElementById('ml').value = s.ml || 3; 
-                syncShift(s.ks_abs || 0);
-                document.getElementById('mc').value = s.mc || ""; document.getElementById('use_shift').checked = s.use_shift || false;
+                document.getElementById('ml').value = s.ml || 3; syncShift(s.ks_abs || 0);
+                document.getElementById('mc').value = s.mc || ""; document.getElementById('abs_shift').checked = s.abs_shift || false;
                 document.getElementById('rt').checked = s.rt || false; document.getElementById('once').checked = s.once || false;
                 document.getElementById('conj').checked = s.conj || false; wordStates = s.wordStates || {};
                 document.querySelectorAll('input[name="cat"]').forEach(c => c.checked = (s.cats || ["country"]).includes(c.value));
@@ -86,20 +72,16 @@
             renderDictionary();
         }
 
-        // ずらし量の同期とプレビュー表示
         function syncShift(val) {
-            const v = parseInt(val);
-            document.getElementById('ks_range').value = v;
-            document.getElementById('ks_abs').value = v;
-            const char1 = "ア";
-            const idx = (KANA_ORDER.indexOf(char1) + v + KANA_ORDER.length) % KANA_ORDER.length;
-            document.getElementById('shift_preview').innerText = `${char1}→${KANA_ORDER[idx]}`;
+            const v = parseInt(val); document.getElementById('ks_range').value = v; document.getElementById('ks_abs').value = v;
+            const idx = (KANA_ORDER.indexOf("ア") + v + KANA_ORDER.length) % KANA_ORDER.length;
+            document.getElementById('shift_preview').innerText = `ア→${KANA_ORDER[idx]}`;
         }
 
         function saveSettings() {
             localStorage.analyzerSettings = JSON.stringify({
                 ml: document.getElementById('ml').value, ks_abs: document.getElementById('ks_abs').value,
-                mc: document.getElementById('mc').value, use_shift: document.getElementById('use_shift').checked,
+                mc: document.getElementById('mc').value, abs_shift: document.getElementById('abs_shift').checked,
                 rt: document.getElementById('rt').checked, once: document.getElementById('once').checked,
                 conj: document.getElementById('conj').checked, wordStates: wordStates,
                 cats: Array.from(document.querySelectorAll('input[name="cat"]:checked')).map(c => c.value)
@@ -114,7 +96,7 @@
                 }).join('')}</div></div>`).join('');
         }
 
-        function bulkSet(s) { event.preventDefault(); event.stopPropagation(); Object.values(masterDataCache).flat().forEach(w => wordStates[w] = s); saveSettings(); renderDictionary(); }
+        function bulkSet(s) { event.preventDefault(); Object.values(masterDataCache).flat().forEach(w => wordStates[w] = s); saveSettings(); renderDictionary(); }
         function cycleState(w) { wordStates[w] = ((wordStates[w] || 0) + 1) % 3; saveSettings(); renderDictionary(); }
 
         async function run() {
@@ -124,7 +106,7 @@
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         max_len: document.getElementById('ml').value, ks_abs: document.getElementById('ks_abs').value,
-                        use_shift: document.getElementById('use_shift').checked, round_trip: document.getElementById('rt').checked,
+                        use_shift: document.getElementById('abs_shift').checked, round_trip: document.getElementById('rt').checked,
                         once_constraint: document.getElementById('once').checked, must_char: document.getElementById('mc').value,
                         exclude_conjugates: document.getElementById('conj').checked,
                         categories: Array.from(document.querySelectorAll('input[name="cat"]:checked')).map(c => c.value),
@@ -151,17 +133,12 @@
             const order = document.getElementById('sort_order').value, filter = document.getElementById('filter_mode').value;
             let f = [...data];
             if(filter==='exists') f = f.filter(x => x.count > 0); else if(filter==='none') f = f.filter(x => x.count === 0);
-            
             if(order==='random') { for(let i=f.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[f[i],f[j]]=[f[j],f[i]];} }
-            else if(order==='desc') f.sort((a,b)=>b.count-a.count); 
-            else if(order==='asc') f.sort((a,b)=>a.count-b.count);
-            else f.sort((a,b)=>KANA_ORDER.indexOf(a.start)!==KANA_ORDER.indexOf(b.start)?KANA_ORDER.indexOf(a.start)-KANA_ORDER.indexOf(b.start):KANA_ORDER.indexOf(a.end)-KANA_ORDER.indexOf(b.end));
-            
+            else if(order==='desc') f.sort((a,b)=>b.count-a.count); else if(order==='asc') f.sort((a,b)=>a.count-b.count);
+            else f.sort((a,b)=>KANA_ORDER.indexOf(a.start)-KANA_ORDER.indexOf(b.start) || KANA_ORDER.indexOf(a.end)-KANA_ORDER.indexOf(b.end));
             currentFilteredList = f;
             document.getElementById('visible_count').innerText = f.length.toLocaleString();
-            
-            // DOM構築の最適化（一括で代入）
-            document.getElementById('res').innerHTML = f.map((item, i) => `
+            document.getElementById('res').innerHTML = f.map(item => `
                 <div class="glass p-4 rounded-2xl flex flex-col gap-1 relative border-l-4 ${item.count > 0 ? 'border-blue-500' : 'border-red-400 opacity-60'}">
                     <div class="flex justify-between items-center"><div class="text-sm font-black"><span class="text-blue-500">${item.start}</span> → <span class="text-red-500">${item.end}</span></div><div class="text-[10px] font-bold ${item.count > 0 ? 'bg-blue-100 text-blue-600' : 'bg-red-50 text-red-400'} px-2 py-0.5 rounded-full">${item.count} 解</div></div>
                     <div class="text-[9px] text-slate-400 font-mono truncate pr-12 italic">${item.example}</div>
@@ -170,7 +147,6 @@
         }
 
         function copyOne(t, b) { navigator.clipboard.writeText(t).then(() => { b.innerText = "Done"; setTimeout(() => b.innerText = "Copy", 1000); }); }
-        
         function copyTop() {
             const limit = parseInt(document.getElementById('copy_limit').value) || 10;
             const top = currentFilteredList.filter(x => x.count > 0).slice(0, limit);
@@ -179,12 +155,11 @@
                 const b = document.getElementById('topCopyBtn'); b.innerText = "COPIED!"; setTimeout(() => b.innerText = "Copy Top", 1500);
             });
         }
-
         function copyAll() {
-            const all = data.filter(x => x.count > 0);
+            const all = currentFilteredList.filter(x => x.count > 0);
             if(!all.length) return;
             navigator.clipboard.writeText(all.map(x => `${x.start}→${x.end}: ${x.example}`).join('\n')).then(() => {
-                const b = document.getElementById('allCopyBtn'); b.innerText = "COPIED!"; setTimeout(() => b.innerText = "ALL COPY", 2000);
+                const b = document.getElementById('allCopyBtn'); b.innerText = "COPIED!"; setTimeout(() => b.innerText = "All Copy", 2000);
             });
         }
         window.onload = init;
