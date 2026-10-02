@@ -130,14 +130,21 @@ def search():
 
     results, start_time = [], time.time()
 
+    ml = d.get("max_len")  # ★ UI の語数
+    ml = int(ml) if ml else None
+
     def solve(path, current_total_len):
         if time.time() - start_time > timeout or (limit_en and len(results) >= limit): return
+
+        # ★ 語数フィルタ（solve 内で適用する必要がある）
+        if ml and len(path) > ml:
+            return
+
         if len_mode == 'diff' and len(path) > 1:
             lens = [len(x) for x in path]
             if len(lens) != len(set(lens)): return
 
-        if len(path) == max_len:
-            if len_mode == 'same' and len(set(len(x) for x in path)) > 1: return
+        if ml and len(path) == ml:
             path_set = set(path)
             if not blue_words.issubset(path_set): return
             norm_t = "".join([get_base_char(c, filt_s, filt_d, filt_h) for c in "".join(path)])
@@ -157,8 +164,8 @@ def search():
 
             if not (check_list(d.get('group_constraints', [])) and check_list(d.get('choice_constraints', []))): return
             if must_chars and not all(norm_t.count(mc) >= 1 and (norm_t.count(mc) == 1 if d.get('once_constraint') else True) for mc in must_chars): return
-            if d.get('target_total_len') and current_total_len != int(d['target_total_len']): return
             if end_char and get_clean_char(path[-1], "tail", 0, conn_s, conn_d, conn_h) not in get_variants(end_char, u_daku, u_handaku, conn_s): return
+
             results.append(list(path))
             return
         
@@ -195,19 +202,12 @@ def search():
     elif sm == 'len_asc': results.sort(key=lambda x: len("".join(x)))
     elif sm == 'len_desc': results.sort(key=lambda x: len("".join(x)), reverse=True)
     elif sm == 'random': random.shuffle(results)
-    ml = d.get("max_len")   # 語数
-    ttl = d.get("ttl")      # 文字数
-    try:
-        if ml:
-            ml = int(ml)
-            results = [rt for rt in results if len(rt) == ml]
 
-        if ttl:
-            ttl = int(ttl)
-            results = [rt for rt in results if sum(len(w) for w in rt) == ttl]
-
-    except:
-        pass
+    # ★ 文字数フィルタ（ttl）は solve 外で適用する）
+    ttl = d.get("ttl")
+    if ttl:
+        ttl = int(ttl)
+        results = [rt for rt in results if sum(len(w) for w in rt) == ttl]
 
     return jsonify({"routes": results, "count": len(results)})
 
