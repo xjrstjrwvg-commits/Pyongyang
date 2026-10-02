@@ -195,11 +195,23 @@ def search():
     elif sm == 'len_asc': results.sort(key=lambda x: len("".join(x)))
     elif sm == 'len_desc': results.sort(key=lambda x: len("".join(x)), reverse=True)
     elif sm == 'random': random.shuffle(results)
+    ml = d.get("max_len")   # 語数
+    ttl = d.get("ttl")      # 文字数
+    try:
+        if ml:
+            ml = int(ml)
+            results = [rt for rt in results if len(rt) == ml]
+
+        if ttl:
+            ttl = int(ttl)
+            results = [rt for rt in results if sum(len(w) for w in rt) == ttl]
+
+    except:
+        pass
+
     return jsonify({"routes": results, "count": len(results)})
 
 # Render環境で正常に通信を待機するための設定
 if __name__ == '__main__':
-    # RenderはPORT環境変数を割り当てるため、それを優先的に使用
-    # host='0.0.0.0' に設定しないと、外部（Renderのプロキシ）からの通信が届きません
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
