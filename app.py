@@ -130,13 +130,17 @@ def search():
 
     results, start_time = [], time.time()
 
-    ml = d.get("max_len")  # ★ UI の語数
+    # ★ UI の語数（ml）と文字数（ttl）を受け取る
+    ml = d.get("max_len")
     ml = int(ml) if ml else None
+
+    ttl = d.get("ttl")
+    ttl = int(ttl) if ttl else None
 
     def solve(path, current_total_len):
         if time.time() - start_time > timeout or (limit_en and len(results) >= limit): return
 
-        # ★ 語数フィルタ（solve 内で適用する必要がある）
+        # ★ solve 内で語数フィルタを適用（ここが最重要）
         if ml and len(path) > ml:
             return
 
@@ -144,6 +148,7 @@ def search():
             lens = [len(x) for x in path]
             if len(lens) != len(set(lens)): return
 
+        # ★ 語数が揃ったらルート完成判定
         if ml and len(path) == ml:
             path_set = set(path)
             if not blue_words.issubset(path_set): return
@@ -166,6 +171,7 @@ def search():
             if must_chars and not all(norm_t.count(mc) >= 1 and (norm_t.count(mc) == 1 if d.get('once_constraint') else True) for mc in must_chars): return
             if end_char and get_clean_char(path[-1], "tail", 0, conn_s, conn_d, conn_h) not in get_variants(end_char, u_daku, u_handaku, conn_s): return
 
+            # ★ solve 内では ttl を判定しない（後半でまとめて判定する）
             results.append(list(path))
             return
         
@@ -203,15 +209,8 @@ def search():
     elif sm == 'len_desc': results.sort(key=lambda x: len("".join(x)), reverse=True)
     elif sm == 'random': random.shuffle(results)
 
-    # ★ 文字数フィルタ（ttl）は solve 外で適用する）
-    ttl = d.get("ttl")
+    # ★★★ ここで ttl を最終フィルタ（solve 内では判定しない）
     if ttl:
-        ttl = int(ttl)
         results = [rt for rt in results if sum(len(w) for w in rt) == ttl]
 
     return jsonify({"routes": results, "count": len(results)})
-
-# Render環境で正常に通信を待機するための設定
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
