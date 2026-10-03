@@ -304,6 +304,7 @@ async function init() {
                 exclude_conjugate: document.getElementById('exclude_conjugate').checked,
                 categories: Array.from(document.querySelectorAll('input[name="cat"]:checked')).map(c => c.value),
                 red_words: Object.keys(wordStates).filter(k => wordStates[k] === 'red'), blue_words: Object.keys(wordStates).filter(k => wordStates[k] === 'blue')
+                ttl: document.getElementById('ttl').value,
             };
             const r = await fetch('/search', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
             const d = await r.json(); currentRoutes = d.routes || []; btn.innerText = "Explore"; btn.disabled = false; display();
